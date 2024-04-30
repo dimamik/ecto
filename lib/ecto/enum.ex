@@ -172,6 +172,16 @@ defmodule Ecto.Enum do
   @impl true
   def load(nil, _, _), do: {:ok, nil}
 
+  def load(atom_data, _loader, %{on_load: on_load}) when is_atom(atom_data) do
+    string_data = Atom.to_string(atom_data)
+
+    case on_load do
+      %{^atom_data => as_atom} -> {:ok, as_atom}
+      %{^string_data => as_atom} -> {:ok, as_atom}
+      _ -> :error
+    end
+  end
+
   def load(data, _loader, %{on_load: on_load}) do
     case on_load do
       %{^data => as_atom} -> {:ok, as_atom}

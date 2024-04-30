@@ -67,6 +67,7 @@ defmodule Ecto.RepoTest do
       field :w, :string, virtual: true
       field :array, {:array, :string}
       field :map, {:map, :string}
+      field :enum, Ecto.Enum, values: ~w(enum_a enum_b)a
       has_many :children, MySchemaChild
     end
   end
@@ -212,6 +213,12 @@ defmodule Ecto.RepoTest do
     # nil
     assert %MySchema{x: nil} =
              TestRepo.load(MySchema, %{x: nil})
+
+    # atom enums
+    assert %MySchema{enum: :enum_a} = TestRepo.load(MySchema, %{enum: :enum_a})
+
+    # string enums
+    assert %MySchema{enum: :enum_a} = TestRepo.load(MySchema, %{enum: "enum_a"})
 
     # invalid field is ignored
     assert %MySchema{} =
@@ -1633,7 +1640,7 @@ defmodule Ecto.RepoTest do
 
   describe "on conflict" do
     test "passes all fields on replace_all" do
-      fields = [:id, :x, :yyy, :z, :array, :map]
+      fields = [:id, :x, :yyy, :z, :array, :map, :enum]
       TestRepo.insert(%MySchema{id: 1}, on_conflict: :replace_all)
       assert_received {:insert, %{source: "my_schema", on_conflict: {^fields, [], []}}}
     end
@@ -1669,7 +1676,7 @@ defmodule Ecto.RepoTest do
     end
 
     test "passes all fields except given fields" do
-      fields = [:x, :yyy, :z, :map]
+      fields = [:x, :yyy, :z, :map, :enum]
       TestRepo.insert(%MySchema{id: 1}, on_conflict: {:replace_all_except, [:id, :array]})
       assert_received {:insert, %{source: "my_schema", on_conflict: {^fields, [], []}}}
     end
